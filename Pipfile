@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+neovim = "*"
+pytest = "*"
+
+[packages]
+torch = { file = "https://download.pytorch.org/whl/cpu/torch-1.7.1-cp39-none-macosx_10_9_x86_64.whl", sys_platform = "== 'darwin'" }
+torchvision = { file = "https://download.pytorch.org/whl/torchvision-0.8.2-cp39-cp39-macosx_10_9_x86_64.whl", sys_platform = "== 'darwin'" }
+matplotlib = "3.3.3"
+scikit-learn = "*"
+
+[requires]
+python_version = "3.9"
