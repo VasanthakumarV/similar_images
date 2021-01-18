@@ -11,7 +11,7 @@ and the embedding array is saved to disk
 
 ```bash
 python main.py --mode train \
-							--train-data "data/train"
+               --train-data "data/train"
 ```
 
 Testing the Model
@@ -23,11 +23,11 @@ available in the testing data directory
 
 ```bash
 python main.py --mode test \
-							--train-data "data/train"
-							--test-data "data/test"
+               --train-data "data/train"
+               --test-data "data/test"
 ```
 
 Sample output, the first image in first row represents the image for which
 similar images are found
 
-[sample_plot](./imgs/three.jpg)
+<img src="./images/three.png" width=500>
