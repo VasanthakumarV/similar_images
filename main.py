@@ -1,5 +1,6 @@
 import os
 import glob
+import argparse
 
 import numpy as np
 from PIL import Image
@@ -8,14 +9,17 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.utils.data import random_split, DataLoader
 import matplotlib.pyplot as plt
+from google_drive_downloader import GoogleDriveDownloader as gdd
 
 from data import MnistDataset
 from model import SimilarityModel
 from similarity import nearest_neighbors
 from plot import plot_grid
 
-TRAIN_DATA = "./data"
-TEST_DATA = "./data/test"
+TRAIN_DIR = "./data/train.zip"
+TRAIN_DATA = "./data/trainingSet/*.jpg"
+TEST_DIR = "./data/test.zip"
+TEST_DATA = "./data/test/*.jpg"
 
 EPOCHS = 2
 BATCH_SIZE = 32
@@ -71,14 +75,13 @@ def create_embedding(model, data_loader, device):
 
             enc_output = model.encoder(data).cpu()
 
-            embedding.append(enc_output.view(BATCH_SIZE, -1))
+            embedding.append(enc_output.view(data.size()[0], -1))
 
     return torch.cat(embedding, dim=0)
 
 
-def main(device):
+def main(dataset, device):
     model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
-    dataset = MnistDataset(TRAIN_DATA)
     mse_loss = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -109,10 +112,8 @@ def main(device):
     torch.save(model.state_dict(), MODEL)
 
 
-def test(device):
-    dataset = MnistDataset(TRAIN_DATA)
-
-    imgs = glob.glob(os.path.join(TEST_DATA, "*.jpg"))
+def test(dataset, device):
+    imgs = glob.glob(os.path.join(os.path.dirname(TEST_DATA), "*.jpg"))
     nimgs = len(imgs)
 
     data_npy = np.array([np.array(Image.open(img)) for img in imgs])
@@ -139,7 +140,37 @@ def test(device):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m",
+                        "--mode",
+                        choices=["train", "test"],
+                        default="train",
+                        type=str,
+                        help="Train or Test the model")
+    parser.add_argument("-tr",
+                        "--train-data",
+                        type=str,
+                        help="Google drive link for training data")
+    parser.add_argument("-te",
+                        "--test-data",
+                        type=str,
+                        help="Google drive link for testing data")
+    args = parser.parse_args()
+
+    if args.train_data is not None:
+        gdd.download_file_from_google_drive(file_id=args.train_data,
+                                            dest_path=TRAIN_DIR,
+                                            unzip=True)
+    if args.test_data is not None:
+        gdd.download_file_from_google_drive(file_id=args.test_data,
+                                            dest_path=TEST_DIR,
+                                            unzip=True)
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    main(device)
-    test(device)
+    dataset = MnistDataset(TRAIN_DATA)
+
+    if args.mode == "train":
+        main(dataset, device)
+    else:
+        test(dataset, device)
