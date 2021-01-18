@@ -16,10 +16,14 @@ from model import SimilarityModel
 from similarity import nearest_neighbors
 from plot import plot_grid
 
+# These variables are used only when zip folders are
+# downloaded from google drive
 TRAIN_DIR = "./data/train.zip"
-TRAIN_DATA = "./data/trainingSet/*.jpg"
 TEST_DIR = "./data/test.zip"
-TEST_DATA = "./data/test/*.jpg"
+
+# Names of the folders where extracted jpeg images are stored
+TRAIN_DATA = "./data/trainingSet"
+TEST_DATA = "./data/test"
 
 EPOCHS = 2
 BATCH_SIZE = 32
@@ -34,6 +38,27 @@ MODEL = "similarity_model.pt"
 
 
 def train(model, data_loader, optimizer, loss_fn, device):
+    """Helper function to train the model
+
+    Parameters
+    ----------
+    model: Module
+        `model` being trained
+    data_loader: DataLoader
+        DataLoader object for feeding data
+    optimizer: Optimizer
+        Optimizer used for optmizing the weights
+    loss_fn: Module
+        Module for calculating the loss
+    devie: str
+        'cpu' or 'cuda' to use
+
+    Returns
+    -------
+    float
+        Loss value
+    """
+    # We switch to training mode
     model.train()
 
     for data in data_loader:
@@ -43,6 +68,7 @@ def train(model, data_loader, optimizer, loss_fn, device):
 
         loss = loss_fn(output, data)
 
+        # Updating the weights
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -51,8 +77,25 @@ def train(model, data_loader, optimizer, loss_fn, device):
 
 
 def validate(model, data_loader, loss_fn, device):
+    """Helper function to validate the model
+
+    Parameters
+    ----------
+    model: Module
+        `model` being evaluated
+    data_loader: DataLoader
+    loss_fn: Module
+    device: str
+
+    Returns
+    -------
+    float
+        Loss value
+    """
+    # We turn on evaluation mode
     model.eval()
 
+    # We turn off tracking gradients
     with torch.no_grad():
         for data in data_loader:
             data = data.to(device)
@@ -65,16 +108,20 @@ def validate(model, data_loader, loss_fn, device):
 
 
 def create_embedding(model, data_loader, device):
+    """Embeddings are created for all training examples"""
     model.eval()
 
+    # List for capturing encodings
     embedding = []
 
     with torch.no_grad():
         for data in data_loader:
             data = data.to(device)
 
-            enc_output = model.encoder(data).cpu()
+            # Running only the encoder
+            enc_output = model.encoder(data)
 
+            # Flattening and appending the output
             embedding.append(enc_output.view(data.size()[0], -1))
 
     return torch.cat(embedding, dim=0)
@@ -112,8 +159,8 @@ def main(dataset, device):
     torch.save(model.state_dict(), MODEL)
 
 
-def test(dataset, device):
-    imgs = glob.glob(os.path.join(os.path.dirname(TEST_DATA), "*.jpg"))
+def test(dataset, test_data, device):
+    imgs = glob.glob(os.path.join(test_data, "*.jpg"))
     nimgs = len(imgs)
 
     data_npy = np.array([np.array(Image.open(img)) for img in imgs])
@@ -141,20 +188,25 @@ def test(dataset, device):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m",
-                        "--mode",
+    parser.add_argument("--mode",
                         choices=["train", "test"],
                         default="train",
                         type=str,
                         help="Train or Test the model")
-    parser.add_argument("-tr",
-                        "--train-data",
+    parser.add_argument("--drive-train-id",
                         type=str,
-                        help="Google drive link for training data")
-    parser.add_argument("-te",
-                        "--test-data",
+                        help="Google drive id for training data")
+    parser.add_argument("--drive-test-id",
                         type=str,
-                        help="Google drive link for testing data")
+                        help="Google drive id for testing data")
+    parser.add_argument("--train-data",
+                        default=TRAIN_DATA,
+                        type=str,
+                        help="Location of training data")
+    parser.add_argument("--test-data",
+                        default=TEST_DATA,
+                        type=str,
+                        help="Location of testing data")
     args = parser.parse_args()
 
     if args.train_data is not None:
@@ -168,9 +220,9 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    dataset = MnistDataset(TRAIN_DATA)
+    dataset = MnistDataset(args.train_data)
 
     if args.mode == "train":
         main(dataset, device)
     else:
-        test(dataset, device)
+        test(dataset, args.test_data, device)
