@@ -19,8 +19,8 @@ from plot import plot_grid
 
 # These variables are used only when zip folders are
 # downloaded from google drive
-TRAIN_DIR = "./data/dataset.zip"
-TEST_DIR = "./data/test.zip"
+TRAIN_DATA_ZIP = "./data/dataset.zip"
+TEST_DATA_ZIP = "./data/test.zip"
 
 # Names of the folders where extracted jpeg images are stored
 TRAIN_DATA = "./data/dataset"
@@ -214,6 +214,17 @@ if __name__ == "__main__":
     parser.add_argument("--drive-test-id",
                         type=str,
                         help="Google drive id for testing data")
+    parser.add_argument(
+        "--train-data-zip",
+        type=str,
+        default=TRAIN_DATA_ZIP,
+        help="Location of the training zip folder downloaded from google drive"
+    )
+    parser.add_argument(
+        "--test-data-zip",
+        type=str,
+        default=TEST_DATA_ZIP,
+        help="Location of the testing zip folder downloaded from google drive")
     parser.add_argument("--train-data",
                         default=TRAIN_DATA,
                         type=str,
@@ -227,13 +238,13 @@ if __name__ == "__main__":
     if args.drive_train_id is not None:
         gdd.download_file_from_google_drive(
             file_id=args.drive_train_id,
-            dest_path=TRAIN_DIR,
+            dest_path=args.train_data,
             unzip=True,
         )
     if args.drive_test_id is not None:
         gdd.download_file_from_google_drive(
             file_id=args.drive_test_id,
-            dest_path=TEST_DIR,
+            dest_path=args.test_data,
             unzip=True,
         )
 
