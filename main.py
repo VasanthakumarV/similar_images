@@ -36,6 +36,9 @@ CHANNELS_OUT = 256
 EMBEDDING = "embedding_epoch_%d.npy"
 MODEL = "model_epoch_%d.pt"
 
+EMBEDDING_FINAL = "embedding_epoch_95.npy"
+MODEL_FINAL = "model_epoch_95.pt"
+
 
 def train(model, data_loader, optimizer, loss_fn, device):
     """Helper function to train the model
@@ -175,9 +178,9 @@ def test(dataset, test_data, device):
     data_npy = np.array([np.array(Image.open(img)) for img in imgs])
     data = torch.from_numpy(data_npy).permute(0, 3, 1, 2).float()
 
-    embedding = np.load(EMBEDDING)
+    embedding = np.load(EMBEDDING_FINAL)
     model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
-    model.load_state_dict(torch.load(MODEL, map_location=device))
+    model.load_state_dict(torch.load(MODEL_FINAL, map_location=device))
     model.eval()
 
     with torch.no_grad():

@@ -1,12 +1,13 @@
 import os
 import glob
 
-from numpy import ndarray
-from torch import Tensor
 from PIL import Image
 import numpy as np
+from numpy import ndarray
 import torch
+from torch import Tensor
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 
 class ImageDataset(Dataset):
@@ -21,6 +22,17 @@ class ImageDataset(Dataset):
         # List of jpeg images in the folder
         self.imgs = glob.glob(os.path.join(path, "*.jpg"))
 
+        # Applying transforms on image for better generalization
+        self.transform = transforms.Compose([
+            transforms.RandomApply(
+                [
+                    transforms.RandomHorizontalFlip(p=0.85),
+                    transforms.RandomPerspective()
+                ],
+                p=0.5,
+            )
+        ])
+
     def __len__(self):
         return len(self.imgs)
 
@@ -28,11 +40,9 @@ class ImageDataset(Dataset):
         return np.array(Image.open(self.imgs[idx]))
 
     def __getitem__(self, idx: int) -> Tensor:
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-
         data = np.array(Image.open(self.imgs[idx])) / 255.
-        return torch.from_numpy(data).permute(2, 0, 1).float()
+        data = torch.from_numpy(data).permute(2, 0, 1).float()
+        return self.transform(data)
 
 
 def test_mnist_dataset():
