@@ -17,24 +17,17 @@ class MnistDataset(Dataset):
     """
     def __init__(self, path: str):
         # List of jpeg images in the folder
-        imgs = glob.glob(os.path.join(path, "*.jpg"))
-
-        # Reading-in the jpeg files as numpy array
-        # We also normalize them by dividing by 255
-        data = np.array([np.array(Image.open(img)) for img in imgs]) / 255.
-
-        # Converting numpy array to torch tensors
-        # NOTE since the images are greyscale, we add the channel dimension
-        self.mnist = torch.from_numpy(data).unsqueeze(1).float()
+        self.imgs = glob.glob(os.path.join(path, "*.jpg"))
 
     def __len__(self):
-        return self.mnist.size()[0]
+        return len(self.imgs)
 
     def __getitem__(self, idx: int):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        return self.mnist[idx]
+        data = np.array(Image.open(self.imgs[idx])) / 255.
+        return torch.from_numpy(data).permute(2, 0, 1).float()
 
 
 def test_mnist_dataset():

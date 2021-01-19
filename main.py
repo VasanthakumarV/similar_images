@@ -18,11 +18,11 @@ from plot import plot_grid
 
 # These variables are used only when zip folders are
 # downloaded from google drive
-TRAIN_DIR = "./data/train.zip"
+TRAIN_DIR = "./data/dataset.zip"
 TEST_DIR = "./data/test.zip"
 
 # Names of the folders where extracted jpeg images are stored
-TRAIN_DATA = "./data/trainingSet"
+TRAIN_DATA = "./data/dataset"
 TEST_DATA = "./data/test"
 
 EPOCHS = 2
@@ -30,8 +30,8 @@ BATCH_SIZE = 32
 TRAIN_SIZE = 0.8
 LEARNING_RATE = 1e-3
 
-CHANNELS_IN = 1
-CHANNELS_OUT = 32
+CHANNELS_IN = 3
+CHANNELS_OUT = 256
 
 EMBEDDING = "embedding.npy"
 MODEL = "similarity_model.pt"
@@ -164,7 +164,7 @@ def test(dataset, test_data, device):
     nimgs = len(imgs)
 
     data_npy = np.array([np.array(Image.open(img)) for img in imgs])
-    data = torch.from_numpy(data_npy).unsqueeze(1).float()
+    data = torch.from_numpy(data_npy).permute(0, 3, 1, 2).float()
 
     embedding = np.load(EMBEDDING)
     model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
@@ -209,14 +209,18 @@ if __name__ == "__main__":
                         help="Location of testing data")
     args = parser.parse_args()
 
-    if args.train_data is not None:
-        gdd.download_file_from_google_drive(file_id=args.train_data,
-                                            dest_path=TRAIN_DIR,
-                                            unzip=True)
-    if args.test_data is not None:
-        gdd.download_file_from_google_drive(file_id=args.test_data,
-                                            dest_path=TEST_DIR,
-                                            unzip=True)
+    if args.drive_train_id is not None:
+        gdd.download_file_from_google_drive(
+            file_id=args.drive_train_id,
+            dest_path=TRAIN_DIR,
+            unzip=True,
+        )
+    if args.drive_test_id is not None:
+        gdd.download_file_from_google_drive(
+            file_id=args.drive_test_id,
+            dest_path=TEST_DIR,
+            unzip=True,
+        )
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
