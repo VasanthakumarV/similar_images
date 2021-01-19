@@ -25,7 +25,7 @@ TEST_DIR = "./data/test.zip"
 TRAIN_DATA = "./data/dataset"
 TEST_DATA = "./data/test"
 
-EPOCHS = 2
+EPOCHS = 10
 BATCH_SIZE = 32
 TRAIN_SIZE = 0.8
 LEARNING_RATE = 1e-3
