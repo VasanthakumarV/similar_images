@@ -25,16 +25,16 @@ TEST_DIR = "./data/test.zip"
 TRAIN_DATA = "./data/dataset"
 TEST_DATA = "./data/test"
 
-EPOCHS = 1
+EPOCHS = 50
 BATCH_SIZE = 32
-TRAIN_SIZE = 0.8
+TRAIN_SIZE = 0.9
 LEARNING_RATE = 1e-3
 
 CHANNELS_IN = 3
 CHANNELS_OUT = 256
 
-EMBEDDING = "embedding.npy"
-MODEL = "similarity_model.pt"
+EMBEDDING = "embedding_epoch_%d.npy"
+MODEL = "model_epoch_%d.pt"
 
 
 def train(model, data_loader, optimizer, loss_fn, device):
@@ -61,6 +61,8 @@ def train(model, data_loader, optimizer, loss_fn, device):
     # We switch to training mode
     model.train()
 
+    loss_total = 0
+
     for data in data_loader:
         data = data.to(device)
 
@@ -73,7 +75,9 @@ def train(model, data_loader, optimizer, loss_fn, device):
         loss.backward()
         optimizer.step()
 
-    return loss.item()
+        loss_total += loss.item()
+
+    return loss_total / len(data_loader)
 
 
 def validate(model, data_loader, loss_fn, device):
@@ -95,6 +99,8 @@ def validate(model, data_loader, loss_fn, device):
     # We turn on evaluation mode
     model.eval()
 
+    loss_total = 0
+
     # We turn off tracking gradients
     with torch.no_grad():
         for data in data_loader:
@@ -102,9 +108,9 @@ def validate(model, data_loader, loss_fn, device):
 
             output = model(data)
 
-            loss = loss_fn(output, data)
+            loss_total += loss_fn(output, data).item()
 
-    return loss.item()
+    return loss_total / len(data_loader)
 
 
 def create_embedding(model, data_loader, device):
@@ -149,14 +155,17 @@ def main(dataset, device):
         train_loss = train(model, train_loader, optimizer, mse_loss, device)
         print(f"Epoch: {epoch}, Training Loss: {train_loss:.4f}")
 
-        val_loss = validate(model, val_loader, mse_loss, device)
-        print(f"Epoch: {epoch}, Validation Loss: {val_loss:.4f}")
+        if epoch % 5 == 0:
+            val_loss = validate(model, val_loader, mse_loss, device)
+            print(f"Epoch: {epoch}, Validation Loss: {val_loss:.4f}")
 
-    embedding = create_embedding(model, full_loader, device)
-    embedding = embedding.cpu().detach().numpy()
+            print("Saving model and embedding")
 
-    np.save(EMBEDDING, embedding)
-    torch.save(model.state_dict(), MODEL)
+            embedding = create_embedding(model, full_loader, device)
+            embedding = embedding.cpu().detach().numpy()
+
+            np.save(EMBEDDING % epoch, embedding)
+            torch.save(model.state_dict(), MODEL % epoch)
 
 
 def test(dataset, test_data, device):
