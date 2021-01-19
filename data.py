@@ -1,13 +1,15 @@
 import os
 import glob
 
+from numpy import ndarray
+from torch import Tensor
 from PIL import Image
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 
-class MnistDataset(Dataset):
+class ImageDataset(Dataset):
     """MNIST Dataset
 
     Parameters
@@ -22,7 +24,10 @@ class MnistDataset(Dataset):
     def __len__(self):
         return len(self.imgs)
 
-    def __getitem__(self, idx: int):
+    def get_image(self, idx: int) -> ndarray:
+        return np.array(Image.open(self.imgs[idx]))
+
+    def __getitem__(self, idx: int) -> Tensor:
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
@@ -32,7 +37,7 @@ class MnistDataset(Dataset):
 
 def test_mnist_dataset():
     # NOTE We assume the images are download and available
-    mnist = MnistDataset("./data/trainingSet")
+    mnist = ImageDataset("./data/dataset")
 
     # Making sure we have all the images
     assert len(mnist) == 42_000, f"MNIST has {len(mnist)} records, not 42,000"

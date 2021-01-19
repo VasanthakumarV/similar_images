@@ -11,7 +11,7 @@ from torch.utils.data import random_split, DataLoader
 import matplotlib.pyplot as plt
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from data import MnistDataset
+from data import ImageDataset
 from model import SimilarityModel
 from similarity import nearest_neighbors
 from plot import plot_grid
@@ -25,7 +25,7 @@ TEST_DIR = "./data/test.zip"
 TRAIN_DATA = "./data/dataset"
 TEST_DATA = "./data/test"
 
-EPOCHS = 10
+EPOCHS = 1
 BATCH_SIZE = 32
 TRAIN_SIZE = 0.8
 LEARNING_RATE = 1e-3
@@ -172,7 +172,7 @@ def test(dataset, test_data, device):
     model.eval()
 
     with torch.no_grad():
-        encoding = model.encoder(data.to(device)).view(
+        encoding = model.encoder(data.to(device)).reshape(
             nimgs, -1).cpu().detach().numpy()
 
     for i in range(nimgs):
@@ -182,8 +182,9 @@ def test(dataset, test_data, device):
             embedding,
         )
 
-        plot_grid(data_npy[i],
-                  dataset[indices].permute(0, 2, 3, 1).cpu().detach().numpy())
+        neighbors = np.stack([dataset.get_image(i) for i in indices])
+
+        plot_grid(data_npy[i], neighbors)
 
 
 if __name__ == "__main__":
@@ -224,7 +225,7 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    dataset = MnistDataset(args.train_data)
+    dataset = ImageDataset(args.train_data)
 
     if args.mode == "train":
         main(dataset, device)
