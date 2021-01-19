@@ -26,11 +26,11 @@ class Encoder(nn.Module):
         self.conv5 = nn.Conv2d(128, cout, 3, padding=1)
 
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), 2)
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        x = F.max_pool2d(F.relu(self.conv3(x)), 2)
-        x = F.max_pool2d(F.relu(self.conv4(x)), 2)
-        x = F.max_pool2d(F.relu(self.conv5(x)), 2)
+        x = F.max_pool2d(F.selu(self.conv1(x)), 2)
+        x = F.max_pool2d(F.selu(self.conv2(x)), 2)
+        x = F.max_pool2d(F.selu(self.conv3(x)), 2)
+        x = F.max_pool2d(F.selu(self.conv4(x)), 2)
+        x = F.max_pool2d(F.selu(self.conv5(x)), 2)
 
         return x
 
@@ -55,11 +55,11 @@ class Decoder(nn.Module):
         self.conv_transpose5 = nn.ConvTranspose2d(16, cout, 2, stride=2)
 
     def forward(self, x):
-        x = F.relu(self.conv_transpose1(x))
-        x = F.relu(self.conv_transpose2(x))
-        x = F.relu(self.conv_transpose3(x))
-        x = F.relu(self.conv_transpose4(x))
-        x = F.relu(self.conv_transpose5(x))
+        x = F.selu(self.conv_transpose1(x))
+        x = F.selu(self.conv_transpose2(x))
+        x = F.selu(self.conv_transpose3(x))
+        x = F.selu(self.conv_transpose4(x))
+        x = F.selu(self.conv_transpose5(x))
 
         return x
 

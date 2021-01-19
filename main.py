@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.optim import Adam
 from torch.utils.data import random_split, DataLoader
 import matplotlib.pyplot as plt
@@ -36,11 +37,11 @@ CHANNELS_OUT = 256
 EMBEDDING = "embedding_epoch_%d.npy"
 MODEL = "model_epoch_%d.pt"
 
-EMBEDDING_FINAL = "embedding_epoch_95.npy"
-MODEL_FINAL = "model_epoch_95.pt"
+EMBEDDING_FINAL = "embedding_epoch_50.npy"
+MODEL_FINAL = "model_epoch_50.pt"
 
 
-def train(model, data_loader, optimizer, loss_fn, device):
+def train(model, data_loader, optimizer, device):
     """Helper function to train the model
 
     Parameters
@@ -51,8 +52,6 @@ def train(model, data_loader, optimizer, loss_fn, device):
         DataLoader object for feeding data
     optimizer: Optimizer
         Optimizer used for optmizing the weights
-    loss_fn: Module
-        Module for calculating the loss
     devie: str
         'cpu' or 'cuda' to use
 
@@ -83,7 +82,7 @@ def train(model, data_loader, optimizer, loss_fn, device):
     return loss_total / len(data_loader)
 
 
-def validate(model, data_loader, loss_fn, device):
+def validate(model, data_loader, device):
     """Helper function to validate the model
 
     Parameters
@@ -91,7 +90,6 @@ def validate(model, data_loader, loss_fn, device):
     model: Module
         `model` being evaluated
     data_loader: DataLoader
-    loss_fn: Module
     device: str
 
     Returns
@@ -138,7 +136,6 @@ def create_embedding(model, data_loader, device):
 
 def main(dataset, device):
     model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
-    mse_loss = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
 
     train_size = int(len(dataset) * TRAIN_SIZE)
@@ -154,12 +151,12 @@ def main(dataset, device):
                               shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-    for epoch in range(EPOCHS):
-        train_loss = train(model, train_loader, optimizer, mse_loss, device)
+    for epoch in range(EPOCHS + 1):
+        train_loss = train(model, train_loader, optimizer, device)
         print(f"Epoch: {epoch}, Training Loss: {train_loss:.4f}")
 
         if epoch % 5 == 0:
-            val_loss = validate(model, val_loader, mse_loss, device)
+            val_loss = validate(model, val_loader, device)
             print(f"Epoch: {epoch}, Validation Loss: {val_loss:.4f}")
 
             print("Saving model and embedding")
@@ -197,6 +194,11 @@ def test(dataset, test_data, device):
         neighbors = np.stack([dataset.get_image(i) for i in indices])
 
         plot_grid(data_npy[i], neighbors)
+
+
+def loss_fn(pred, target):
+    """Loss function for the model"""
+    return F.mse_loss(pred, target)
 
 
 if __name__ == "__main__":
