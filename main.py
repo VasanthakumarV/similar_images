@@ -34,11 +34,11 @@ LEARNING_RATE = 1e-3
 CHANNELS_IN = 3
 CHANNELS_OUT = 256
 
-EMBEDDING = "embedding_epoch_%d.npy"
-MODEL = "model_epoch_%d.pt"
+EMBEDDING_CHKPT = "embedding_epoch_%d.npy"
+MODEL_CHKPT = "model_epoch_%d.pt"
 
-EMBEDDING_FINAL = "embedding_epoch_50.npy"
-MODEL_FINAL = "model_epoch_50.pt"
+EMBEDDING_FINAL = "./embedding.npy"
+MODEL_FINAL = "./model.pt"
 
 
 def train(model, data_loader, optimizer, device):
@@ -164,8 +164,8 @@ def main(dataset, device):
             embedding = create_embedding(model, full_loader, device)
             embedding = embedding.cpu().detach().numpy()
 
-            np.save(EMBEDDING % epoch, embedding)
-            torch.save(model.state_dict(), MODEL % epoch)
+            np.save(EMBEDDING_CHKPT % epoch, embedding)
+            torch.save(model.state_dict(), MODEL_CHKPT % epoch)
 
 
 def test(dataset, test_data, device):
@@ -233,20 +233,36 @@ if __name__ == "__main__":
                         default=TEST_DATA,
                         type=str,
                         help="Location of testing data")
+    parser.add_argument("--num-similar-imgs",
+                        default=9,
+                        type=int,
+                        help="Number of similar images to identify")
+    parser.add_argument("--drive-embedding-id",
+                        type=str,
+                        help="Google drive id for the embedding file")
+    parser.add_argument("--drive-model-id",
+                        type=str,
+                        help="Google drive id for the model file")
     args = parser.parse_args()
 
     if args.drive_train_id is not None:
         gdd.download_file_from_google_drive(
             file_id=args.drive_train_id,
-            dest_path=args.train_data,
+            dest_path=args.train_data_zip,
             unzip=True,
         )
     if args.drive_test_id is not None:
         gdd.download_file_from_google_drive(
             file_id=args.drive_test_id,
-            dest_path=args.test_data,
+            dest_path=args.test_data_zip,
             unzip=True,
         )
+    if args.drive_embedding_id is not None:
+        gdd.download_file_from_google_drive(file_id=args.drive_embedding_id,
+                                            dest_path=EMBEDDING_FINAL)
+    if args.drive_model_id is not None:
+        gdd.download_file_from_google_drive(file_id=args.drive_model_id,
+                                            dest_path=MODEL_FINAL)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
