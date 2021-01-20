@@ -27,8 +27,10 @@ class ImageDataset(Dataset):
         # and it always stays in sync with the embedding file
         self.imgs.sort()
 
-        # Applying transforms on image for better generalization
         self.transform = transforms.Compose([
+            # Scaling down the image
+            transforms.Resize(256),
+            # Transforms on image for more variations
             transforms.RandomApply(
                 [
                     transforms.RandomHorizontalFlip(p=0.80),
@@ -61,7 +63,7 @@ def test_mnist_dataset():
     # Making sure we have the channel dimension and the height and width
     # checks out
     assert mnist[0].size() == torch.Size(
-        [3, 512, 512]), f"Shape of MNIST image: {mnist[0].size()}"
+        [3, 256, 256]), f"Shape of MNIST image: {mnist[0].size()}"
 
     # Making sure the data is normalized
     assert mnist[0].max() == 1.
