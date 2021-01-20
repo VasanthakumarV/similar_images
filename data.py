@@ -22,6 +22,11 @@ class ImageDataset(Dataset):
         # List of jpeg images in the folder
         self.imgs = glob.glob(os.path.join(path, "*.jpg"))
 
+        # We sort the image files based on their name
+        # This is to make sure the order does not change on different platforms
+        # and it always stays in sync with the embedding file
+        self.imgs.sort()
+
         # Applying transforms on image for better generalization
         self.transform = transforms.Compose([
             transforms.RandomApply(
