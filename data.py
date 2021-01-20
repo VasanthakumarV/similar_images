@@ -55,12 +55,12 @@ def test_mnist_dataset():
     mnist = ImageDataset("./data/dataset")
 
     # Making sure we have all the images
-    assert len(mnist) == 42_000, f"MNIST has {len(mnist)} records, not 42,000"
+    assert len(mnist) == 4738, f"MNIST has {len(mnist)} records, not 4738"
 
     # Making sure we have the channel dimension and the height and width
     # checks out
     assert mnist[0].size() == torch.Size(
-        [1, 28, 28]), f"Shape of MNIST image: {mnist[0].size()}"
+        [3, 512, 512]), f"Shape of MNIST image: {mnist[0].size()}"
 
     # Making sure the data is normalized
     assert mnist[0].max() == 1.
