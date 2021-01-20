@@ -5,6 +5,15 @@ import matplotlib.pyplot as plt
 
 
 def plot_grid(base_image: ndarray, images: ndarray):
+    """Plots the base image with its neighbors in a single plot
+    Parameters
+    ----------
+    base_image: ndarray
+        This image gets plotted on the first row
+    images: ndarray
+        These are images that deemed to be similar by the neural net,
+        they get plotted from the second row, three per row till exhaustion
+    """
     # The number of columns is fixed
     ncols = 3
 
