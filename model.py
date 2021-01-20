@@ -11,23 +11,17 @@ class Encoder(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 64, 3, padding=1)
-        self.bn3 = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 128, 3, padding=1)
-        self.bn4 = nn.BatchNorm2d(128)
-        self.conv5 = nn.Conv2d(128, 256, 3, padding=1)
-        self.bn5 = nn.BatchNorm2d(cout)
+        self.conv1 = nn.Conv2d(3, 8, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(8)
+        self.conv2 = nn.Conv2d(8, 16, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 32, 3, padding=1)
+        self.bn3 = nn.BatchNorm2d(32)
 
     def forward(self, x):
         x = F.max_pool2d(F.selu(self.bn1(self.conv1(x))), 2)
         x = F.max_pool2d(F.selu(self.bn2(self.conv2(x))), 2)
         x = F.max_pool2d(F.selu(self.bn3(self.conv3(x))), 2)
-        x = F.max_pool2d(F.selu(self.bn4(self.conv4(x))), 2)
-        x = F.max_pool2d(F.selu(self.bn5(self.conv5(x))), 2)
 
         return x
 
@@ -37,15 +31,11 @@ class Decoder(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv_transpose1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
-        self.conv_transpose2 = nn.ConvTranspose2d(128, 64, 2, stride=2)
-        self.conv_transpose3 = nn.ConvTranspose2d(64, 32, 2, stride=2)
-        self.conv_transpose4 = nn.ConvTranspose2d(32, 16, 2, stride=2)
-        self.conv_transpose5 = nn.ConvTranspose2d(16, 3, 2, stride=2)
+        self.conv_transpose3 = nn.ConvTranspose2d(32, 16, 2, stride=2)
+        self.conv_transpose4 = nn.ConvTranspose2d(16, 8, 2, stride=2)
+        self.conv_transpose5 = nn.ConvTranspose2d(8, 3, 2, stride=2)
 
     def forward(self, x):
-        x = F.selu(self.conv_transpose1(x))
-        x = F.selu(self.conv_transpose2(x))
         x = F.selu(self.conv_transpose3(x))
         x = F.selu(self.conv_transpose4(x))
         x = F.selu(self.conv_transpose5(x))
@@ -82,24 +72,24 @@ class SimilarityModel(nn.Module):
 
 class TestModel:
     def test_encoder(self):
-        encoder = Encoder(3, 256)
-        output = encoder(torch.rand(10, 3, 512, 512))
+        encoder = Encoder()
+        output = encoder(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
             [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
 
     def test_decoder(self):
-        decoder = Decoder(256, 3)
-        output = decoder(torch.rand(10, 256, 16, 16))
+        decoder = Decoder()
+        output = decoder(torch.rand(10, 64, 64, 64))
         assert output.size() == torch.Size(
             [10, 3, 512, 512]), f"Decoder output shape: {output.size()}"
 
     def test_similarity_model(self):
-        model = SimilarityModel(3, 256)
-        output = model(torch.rand(10, 3, 512, 512))
+        model = SimilarityModel()
+        output = model(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
             [10, 3, 512,
              512]), f"SimilarityModel output shape: {output.size()}"
 
-        output = model.encoder(torch.rand(10, 3, 512, 512))
+        output = model.encoder(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
             [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
