@@ -93,23 +93,24 @@ class SimilarityModel(nn.Module):
 
 class TestModel:
     def test_encoder(self):
-        encoder = Encoder(1, 256)
-        output = encoder(torch.rand(10, 1, 28, 28))
+        encoder = Encoder(3, 256)
+        output = encoder(torch.rand(10, 3, 512, 512))
         assert output.size() == torch.Size(
-            [10, 1, 28, 28]), f"Encoder output shape: {output.size()}"
+            [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
 
     def test_decoder(self):
-        decoder = Decoder(256, 1)
-        output = decoder(torch.rand(10, 32, 6, 6))
+        decoder = Decoder(256, 3)
+        output = decoder(torch.rand(10, 256, 16, 16))
         assert output.size() == torch.Size(
-            [10, 32, 6, 6]), f"Decoder output shape: {output.size()}"
+            [10, 3, 512, 512]), f"Decoder output shape: {output.size()}"
 
     def test_similarity_model(self):
-        model = SimilarityModel(1, 256)
-        output = model(torch.rand(10, 1, 28, 28))
+        model = SimilarityModel(3, 256)
+        output = model(torch.rand(10, 3, 512, 512))
         assert output.size() == torch.Size(
-            [10, 32, 6, 6]), f"SimilarityModel output shape: {output.size()}"
+            [10, 3, 512,
+             512]), f"SimilarityModel output shape: {output.size()}"
 
-        output = model.encoder(torch.rand(10, 1, 28, 28))
+        output = model.encoder(torch.rand(10, 3, 512, 512))
         assert output.size() == torch.Size(
-            [10, 32, 6, 6]), f"Encoder output shape: {output.size()}"
+            [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
