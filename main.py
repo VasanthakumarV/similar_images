@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam
+from torchvision import transforms
 from torch.utils.data import random_split, DataLoader
 import matplotlib.pyplot as plt
 from google_drive_downloader import GoogleDriveDownloader as gdd
@@ -281,9 +282,23 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    dataset = ImageDataset(args.train_data)
+    transforms = transforms.Compose([
+        # Scaling down the image
+        transforms.Resize(256),
+        # Transforms on image for more variations
+        transforms.RandomApply(
+            [
+                transforms.RandomHorizontalFlip(p=0.80),
+                transforms.RandomAffine(
+                    degrees=30, translate=(0.25, 0.5), scale=(0.9, 1.1)),
+            ],
+            p=0.5,
+        )
+    ])
 
     if args.mode == "train":
+        dataset = ImageDataset(args.train_data, transforms)
         main(dataset, device)
     else:
+        dataset = ImageDataset(args.train_data)
         test(dataset, args.test_data, device)
