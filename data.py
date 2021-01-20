@@ -31,8 +31,9 @@ class ImageDataset(Dataset):
         self.transform = transforms.Compose([
             transforms.RandomApply(
                 [
-                    transforms.RandomHorizontalFlip(p=0.85),
-                    transforms.RandomPerspective()
+                    transforms.RandomHorizontalFlip(p=0.80),
+                    transforms.RandomAffine(
+                        degrees=30, translate=(0.25, 0.5), scale=(0.9, 1.1)),
                 ],
                 p=0.5,
             )
