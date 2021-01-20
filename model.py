@@ -51,7 +51,8 @@ class SimilarityModel(nn.Module):
         self.dec = Decoder()
 
     def encoder(self, x) -> Tensor:
-        """
+        """Appies only the Encoder
+
         Returns
         -------
         Tensor
@@ -60,7 +61,8 @@ class SimilarityModel(nn.Module):
         return self.enc(x)
 
     def forward(self, x) -> Tensor:
-        """
+        """Applies Encoder followed by the Decoder
+
         Returns
         -------
         Tensor
@@ -75,21 +77,21 @@ class TestModel:
         encoder = Encoder()
         output = encoder(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
-            [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
+            [10, 32, 32, 32]), f"Encoder output shape: {output.size()}"
 
     def test_decoder(self):
         decoder = Decoder()
-        output = decoder(torch.rand(10, 64, 64, 64))
+        output = decoder(torch.rand(10, 32, 32, 32))
         assert output.size() == torch.Size(
-            [10, 3, 512, 512]), f"Decoder output shape: {output.size()}"
+            [10, 3, 256, 256]), f"Decoder output shape: {output.size()}"
 
     def test_similarity_model(self):
         model = SimilarityModel()
         output = model(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
-            [10, 3, 512,
-             512]), f"SimilarityModel output shape: {output.size()}"
+            [10, 3, 256,
+             256]), f"SimilarityModel output shape: {output.size()}"
 
         output = model.encoder(torch.rand(10, 3, 256, 256))
         assert output.size() == torch.Size(
-            [10, 256, 16, 16]), f"Encoder output shape: {output.size()}"
+            [10, 32, 32, 32]), f"Encoder output shape: {output.size()}"
