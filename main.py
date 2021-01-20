@@ -174,17 +174,12 @@ def main(dataset, device):
             torch.save(model.state_dict(), MODEL_CHKPT % epoch)
 
 
-def test(dataset, test_data, device):
+def test(dataset, test_data, num_similar_imgs, device):
     """Helper function to find similar images for new images"""
-    imgs = glob.glob(os.path.join(test_data, "*.jpg"))
-    nimgs = len(imgs)
-
-    # Reading in the testing data
-    data_npy = np.array([np.array(Image.open(img)) for img in imgs])
-
-    # Converting the read data in torch tensors
-    # and making sure the second dimension represents the channel size
-    data = torch.from_numpy(data_npy).permute(0, 3, 1, 2).float()
+    # We create a new dataloader instance for the test images
+    # This is to make sure resize transform is applied to the test images
+    test_data = ImageDataset(test_data)
+    data_loader = DataLoader(test_data, batch_size=BATCH_SIZE)
 
     # Loading in the training examples' embedding matrix
     embedding = np.load(EMBEDDING_FINAL)
@@ -194,22 +189,32 @@ def test(dataset, test_data, device):
     model.load_state_dict(torch.load(MODEL_FINAL, map_location=device))
     model.eval()
 
+    # A list to capture all the encoder output
+    encodings = []
+
     with torch.no_grad():
-        # Encoding the testing images
-        encoding = model.encoder(data.to(device)).reshape(
-            nimgs, -1).cpu().detach().numpy()
+        for data in data_loader:
+            # Encoding the testing images and appending them as numpy
+            # arrays to a list
+            encodings.append(
+                model.encoder(data.to(device)).reshape(
+                    data.size()[0], -1).cpu().detach().numpy())
+
+    # Here we concatenate all the images available across different batches
+    encodings = np.concatenate(encodings)
 
     # Here we find the similar images for each testing image and plot them
-    for i in range(nimgs):
+    for i in range(len(test_data)):
         indices = nearest_neighbors(
-            9,
-            encoding[i].reshape(1, -1),
+            num_similar_imgs,
+            encodings[[i]],
             embedding,
         )
 
         neighbors = np.stack([dataset.get_image(i) for i in indices])
 
-        plot_grid(data_npy[i], neighbors)
+        plot_grid(test_data[i].permute(1, 2, 0).cpu().detach().numpy(),
+                  neighbors)
 
 
 def loss_fn(pred, target):
@@ -301,4 +306,4 @@ if __name__ == "__main__":
         main(dataset, device)
     else:
         dataset = ImageDataset(args.train_data)
-        test(dataset, args.test_data, device)
+        test(dataset, args.test_data, args.num_similar_imgs, device)
