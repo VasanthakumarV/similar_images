@@ -7,19 +7,11 @@ import torch.nn.functional as F
 
 
 class Encoder(nn.Module):
-    """Convolutional Encoder
-
-    Parameters
-    ----------
-    cin: int
-        Input channel size
-    cout: int
-        Output channel size
-    """
-    def __init__(self, cin: int, cout: int):
+    """Convolutional Encoder"""
+    def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(cin, 16, 3, padding=1)
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
         self.bn2 = nn.BatchNorm2d(32)
@@ -27,7 +19,7 @@ class Encoder(nn.Module):
         self.bn3 = nn.BatchNorm2d(64)
         self.conv4 = nn.Conv2d(64, 128, 3, padding=1)
         self.bn4 = nn.BatchNorm2d(128)
-        self.conv5 = nn.Conv2d(128, cout, 3, padding=1)
+        self.conv5 = nn.Conv2d(128, 256, 3, padding=1)
         self.bn5 = nn.BatchNorm2d(cout)
 
     def forward(self, x):
@@ -41,23 +33,15 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """Convolutional Decoder
-
-    Parameters
-    ----------
-    cin: int
-        Input channel size
-    cout: int
-        Output channel size
-    """
-    def __init__(self, cin: int, cout: int):
+    """Convolutional Decoder"""
+    def __init__(self):
         super().__init__()
 
-        self.conv_transpose1 = nn.ConvTranspose2d(cin, 128, 2, stride=2)
+        self.conv_transpose1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
         self.conv_transpose2 = nn.ConvTranspose2d(128, 64, 2, stride=2)
         self.conv_transpose3 = nn.ConvTranspose2d(64, 32, 2, stride=2)
         self.conv_transpose4 = nn.ConvTranspose2d(32, 16, 2, stride=2)
-        self.conv_transpose5 = nn.ConvTranspose2d(16, cout, 2, stride=2)
+        self.conv_transpose5 = nn.ConvTranspose2d(16, 3, 2, stride=2)
 
     def forward(self, x):
         x = F.selu(self.conv_transpose1(x))
@@ -70,11 +54,11 @@ class Decoder(nn.Module):
 
 
 class SimilarityModel(nn.Module):
-    def __init__(self, cin: int, cout: int):
+    def __init__(self):
         super().__init__()
 
-        self.enc = Encoder(cin, cout)
-        self.dec = Decoder(cout, cin)
+        self.enc = Encoder()
+        self.dec = Decoder()
 
     def encoder(self, x) -> Tensor:
         """

@@ -31,11 +31,6 @@ BATCH_SIZE = 32
 TRAIN_SIZE = 0.9
 LEARNING_RATE = 1e-3
 
-# Number of channels in the input image
-CHANNELS_IN = 3
-# Number of the channels in the encoder output
-CHANNELS_OUT = 256
-
 EMBEDDING_CHKPT = "embedding_epoch_%d.npy"
 MODEL_CHKPT = "model_epoch_%d.pt"
 
@@ -141,7 +136,7 @@ def main(dataset, device):
     examples' embedding matrix
     """
     # Initializing the model
-    model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
+    model = SimilarityModel().to(device)
 
     # Initializing the optimizer
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
@@ -194,7 +189,7 @@ def test(dataset, test_data, device):
     embedding = np.load(EMBEDDING_FINAL)
 
     # Loading in the trained model
-    model = SimilarityModel(cin=CHANNELS_IN, cout=CHANNELS_OUT).to(device)
+    model = SimilarityModel().to(device)
     model.load_state_dict(torch.load(MODEL_FINAL, map_location=device))
     model.eval()
 
